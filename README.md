@@ -4,4 +4,4 @@
 $ docker-compose up
 ```
 
-http://<your development machine ip>:4444/にアクセス
+http://localhost:4444/にアクセス
