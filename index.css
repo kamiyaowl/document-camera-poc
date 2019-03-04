@@ -1,0 +1,27 @@
+.header {
+    margin-top: 2vh;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: transparent;
+}
+.footer {
+    margin-bottom: 2vh;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: transparent;
+}
+
+#app {
+    display: -webkit-box;
+    display: -ms-flexbox;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    text-align: center;
+    background: gray;
+    width: 100vw;
+    height: 90vh;
+}
+

@@ -1,46 +1,34 @@
 <!DOCTYPE html>
 <html lang="ja">
-    <head>
-        <meta name="viewport" content="width=device-width, initial-scale=1" />
-        <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-        <title>Document Camera Test</title>
-        <meta name="description" content="Document Camera" />
 
-        <link
-        rel="stylesheet"
-        href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.0.0/theme-chalk/index.css"
-      />
-      <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css" />
-      <link
-        rel="stylesheet"
-        href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
-        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr"
-        crossorigin="anonymous"
-      />
-      <link rel="stylesheet" href="index.css" />
-    </head>
-    <body>
-        <div id="app">
-            <el-button @click="test">Test</el-button>
-        </div>
+<head>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <title>Sashimi Tampopo Jinsei</title>
+    <meta name="description" content="Document Camera" />
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.0.0/theme-chalk/index.css" />
+    <link rel="stylesheet" href="https://unpkg.com/buefy/dist/buefy.min.css" />
+    <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.7.2/css/all.css"
+        integrity="sha384-fnmOCqbTlWIlj8LyTjo7mOUStjsKC4pOpQbqyi7RrhN7udi9RwhKkMHpvLbHG9Sr" crossorigin="anonymous" />
+    <link rel="stylesheet" href="index.css" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/matter-js/0.12.0/matter.js"></script>
+    <script src="index.js"></script>
+</head>
+
+<body>
+    <div class="header">
+        <h1>Sashimi Tampopo Jinsei</h1>
+    </div>
+
+    <canvas id="app">
+    </canvas>
+
+    <div class="footer">
+        <h6><a href="https://twitter.com/kamiya_owl">@kamiya_owl</a></h6>
+    </div>
 
 
-        <script src="https://cdn.jsdelivr.net/npm/vue@2.6.7/dist/vue.js"></script>
+</body>
 
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.0.0/index.js"></script>
-        <script src="https://cdnjs.cloudflare.com/ajax/libs/element-ui/2.0.0/locale/ja.js"></script>
-
-        <script>
-            ELEMENT.locale("ja", ELEMENT.lang.ja);
-            new Vue({
-                el: "#app",
-                data: {},
-                methods: {
-                    test: () => {
-                        alert("test");
-                    },
-                }
-            });
-        </script>
-    </body>
 </html>
