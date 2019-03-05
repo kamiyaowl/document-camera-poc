@@ -1,32 +1,45 @@
-window.addEventListener('load', function () {
-    console.log(" === sashimi === ");
-    const width = document.getElementById("container").clientWidth;
-    const height = document.getElementById("container").clientHeight;
-    console.log(width, height);
+//============================== setup ==============================
+console.log(" === sashimi === ");
+// const
+const sashimi_path = "./images/food_sashimi.png";
+const tampopo_path = "./images/flower_tanpopo.png";
+const nakayoshi_path = "./images/kaisya_nakayoshi.png";
+const player_path = "./images/food_sashimi.png";
 
-    const canvas = document.getElementById('app');
-    canvas.width = width;
-    canvas.height = height;
+const stage = new createjs.Stage("app");
+if(createjs.Touch.isSupported()) {
+    createjs.Touch.enable(stage);
+}
 
-    const sashimi_path = "./images/food_sashimi.png";
-    const tampopo_path = "./images/flower_tanpopo.png";
-    const nakayoshi_path = "./images/kaisya_nakayoshi.png";
-    const player_path = "./images/pose_udemakuri_man.png";
+const player = new createjs.Bitmap(player_path);
+player.regX = 400 / 2;
+player.regY = 253 / 2;
+stage.addChild(player);
 
-    const stage = new createjs.Stage("app");
+const player_center = new createjs.Shape();
+player_center.graphics.beginFill("Red").drawCircle(0,0,100);
+player_center.alpha = 0.3;
+stage.addChild(player_center);
 
-    const shape = new createjs.Shape();
-    shape.graphics.beginFill("DarkRed");
-    shape.graphics.drawCircle(0, 0, 100);
-    stage.addChild(shape);
+createjs.Ticker.addEventListener('tick', function(){
+    tick();
+    stage.update();
+});
 
-    const player = new createjs.Bitmap(player_path);
-    stage.addChild(player);
-
-    createjs.Ticker.setFPS(30);
-    createjs.Ticker.addEventListener('tick', function(){
-        stage.update();
-    });
-
-    console.log('ready');
+fit_screen();
+console.log('ready');
+//============================== setup ==============================
+function fit_screen() {
+    stage.canvas.width = window.innerWidth;
+    stage.canvas.height = window.innerHeight;
+}
+function tick() {
+    // mouse cursor
+    player_center.x = stage.mouseX;
+    player_center.y = stage.mouseY;
+    player.x = stage.mouseX;
+    player.y = stage.mouseY;
+}
+window.addEventListener('resize', function(){
+    fit_screen();
 });
