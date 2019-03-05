@@ -1,7 +1,7 @@
 window.addEventListener('load', function () {
     console.log(" === sashimi === ");
-    const width = window.innerWidth;
-    const height = window.innerHeight * 0.9;
+    const width = document.getElementById("container").clientWidth;
+    const height = document.getElementById("container").clientHeight;
     console.log(width, height);
 
     const canvas = document.getElementById('app');
@@ -10,20 +10,23 @@ window.addEventListener('load', function () {
 
     const sashimi_path = "./images/food_sashimi.png";
     const tampopo_path = "./images/flower_tanpopo.png";
+    const nakayoshi_path = "./images/kaisya_nakayoshi.png";
+    const player_path = "./images/pose_udemakuri_man.png";
 
-    // Stageオブジェクトを作成します
-    var stage = new createjs.Stage("app");
+    const stage = new createjs.Stage("app");
 
-    // 円を作成します
-    var shape = new createjs.Shape();
-    shape.graphics.beginFill("DarkRed"); // 赤色で描画するように設定
-    shape.graphics.drawCircle(0, 0, 100); //半径 100px の円を描画
-    shape.x = 200; // X 座標 200px の位置に配置
-    shape.y = 200; // Y 座標 200px の位置に配置
-    stage.addChild(shape); // 表示リストに追加
+    const shape = new createjs.Shape();
+    shape.graphics.beginFill("DarkRed");
+    shape.graphics.drawCircle(0, 0, 100);
+    stage.addChild(shape);
 
-    // Stageの描画を更新します
-    stage.update();
+    const player = new createjs.Bitmap(player_path);
+    stage.addChild(player);
+
+    createjs.Ticker.setFPS(30);
+    createjs.Ticker.addEventListener('tick', function(){
+        stage.update();
+    });
 
     console.log('ready');
 });

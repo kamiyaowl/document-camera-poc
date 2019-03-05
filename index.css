@@ -1,27 +1,21 @@
-.header {
-    margin-top: 2vh;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background: transparent;
-}
-.footer {
-    margin-bottom: 2vh;
-    justify-content: center;
-    align-items: center;
-    text-align: center;
-    background: transparent;
-}
 
-#app {
+body {
     display: -webkit-box;
     display: -ms-flexbox;
     display: flex;
     justify-content: center;
     align-items: center;
     text-align: center;
-    background: gray;
-    width: 100vw;
-    height: 90vh;
+    background: lightgray;
 }
-
+.container {
+    display: inline-block;
+    width: 100vw;
+    max-width: 640px;
+    height: 100vh;
+    background: darkgray;
+}
+#app {
+    display: inline-block;
+    background: gray;
+}
