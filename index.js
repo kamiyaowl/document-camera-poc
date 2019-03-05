@@ -37,25 +37,44 @@ player_center.alpha = 0.3;
 player_center.visible = (config.show_pointer ? true : false);
 stage.addChild(player_center);
 
+const counter_text = new createjs.Text("Ready", "32px sans-serif", "Orange");
+stage.addChild(counter_text);
+
 createjs.Ticker.addEventListener('tick', function(){
     tick();
     stage.update();
 });
 
-fit_screen();
-console.log('ready');
-//============================== setup ==============================
 function fit_screen() {
     stage.canvas.width = window.innerWidth;
     stage.canvas.height = window.innerHeight;
 }
-function tick() {
-    // mouse cursor
-    player_center.x = stage.mouseX;
-    player_center.y = stage.mouseY;
-    player.x = stage.mouseX;
-    player.y = stage.mouseY;
-}
+fit_screen();
 window.addEventListener('resize', function(){
     fit_screen();
 });
+console.log('ready');
+//============================== setup ==============================
+
+//============================== game ==============================
+
+let startDate = new Date(); // 生存時間計算用
+let isRun = true; // ゲームオーバー時に止める
+function game_init() {
+    startDate = new Date();
+    isRun = true;
+}
+game_init();
+
+function tick() {
+    if (isRun) {
+        // counter
+        counter_text.text = ((new Date() - startDate) / 1000.0) + " [sec]";
+        // mouse cursor
+        player_center.x = stage.mouseX;
+        player_center.y = stage.mouseY;
+        player.x = stage.mouseX;
+        player.y = stage.mouseY;
+    }
+}
+//============================== game ==============================
