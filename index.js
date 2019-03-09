@@ -123,10 +123,11 @@ function update_shot() {
 
 //======================== danmaku generator ========================
 
+// 全方位に一斉に出す
 // x,y: 中心
 // n: 玉の数
 // t: 時間
-function circle(x, y, n, t = 2000) {
+function circle(x, y, n = 15, t = 2000) {
     const shots = alloc_shot(n);
     const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
     for(let i = 0 ; i < n ; ++i) {
@@ -141,11 +142,39 @@ function circle(x, y, n, t = 2000) {
     }
 }
 
+// 全方位に順番に玉を出す
+// x,y: 中心
+// n: 玉の数
+// c: 回転数
+// t: 時間
+// t_start: 最初に球が出現してから止まっている時間
+// delta_t: 弾ごとのディレイ
+function guruguru(x, y, n = 300, c = 11, t = 2000, t_start = 200, delta_t = 50) {
+    const shots = alloc_shot(n);
+    const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
+    const r_start = r * 0.05;
+    for(let i = 0 ; i < n ; ++i) {
+        const rad = 2 * Math.PI * i / (n / c);
+        const dx_start = r_start * Math.cos(rad) + x;
+        const dy_start = r_start * Math.sin(rad) + y;
+        const dx = r * Math.cos(rad) + x;
+        const dy = r * Math.sin(rad) + y;
+        createjs.Tween
+                .get(shots[i])
+                .wait(delta_t * i)
+                .to({x: x, y: y, visible: true})
+                .to({x: dx_start, y: dy_start}, t_start, createjs.Ease.sineIn)
+                .wait(config.delay)
+                .to({x: dx, y: dy}, t, createjs.Ease.sineIn);
+    }
+}
+
+// 敵の方向に速度の違う玉を一気に出す
 // x,y: 中心
 // n: 玉の数
 // t: 時間
 // delta_t: 弾ごとのスピード差分 
-function horming(x, y, n, t = 2000, delta_t = 500) {
+function horming(x, y, n = 10, t = 2000, delta_t = 500) {
     const sx = player.x - x;
     const sy = player.y - y;
     const rad = Math.atan2(sy, sx);
@@ -163,8 +192,9 @@ function horming(x, y, n, t = 2000, delta_t = 500) {
                 .to({x: dx, y: dy}, t + delta_t * i, createjs.Ease.sineIn);
     }
 }
-circle(10, 10, 10);
-horming(0, 0, 10);
+circle(10, 10);
+guruguru(10, 10);
+horming(0, 0);
 
 //======================== danmaku generator ========================
 
