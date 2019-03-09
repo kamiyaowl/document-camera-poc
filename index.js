@@ -14,6 +14,8 @@ function get_query() {
     }
 }
 const config = get_query();
+if(!config.margin) config.margin = 100;
+
 console.log('config', config);
 // const
 const sashimi_path = "./images/food_sashimi.png";
@@ -95,13 +97,13 @@ function alloc_shot(n) {
 function update_shot() {
     for(let i = 0 ; i < shots_use.length ; ++i) {
         // 画面外のリソース開放管理
-        const margin = 100;
         if((!shots_use[i].visible) ||
-           (shots_use[i].x < -margin || shots_use[i].x > window.innerWidth + margin) ||
-           (shots_use[i].y < -margin || shots_use[i].y > window.innerHeight + margin)) {
+           (shots_use[i].x < -config.margin || shots_use[i].x > window.innerWidth + config.margin) ||
+           (shots_use[i].y < -config.margin || shots_use[i].y > window.innerHeight + config.margin)) {
             shots_use[i].visible = false;
             shots_free.push(shots_use[i]);
             shots_use.splice(i, 1);
+            continue;
         }
         // 自機との当たり判定
         const p = player_center.localToLocal(0, 0, shots_use[i]);
@@ -111,7 +113,11 @@ function update_shot() {
     }
     return false;
 }
-console.log(alloc_shot(3));
+
+
+const x = alloc_shot(1);
+const t = createjs.Tween.get(x[0]).to({y: 2000}, 2000, createjs.Ease.sineIn);
+
 //======================== danmaku generator ========================
 
 
