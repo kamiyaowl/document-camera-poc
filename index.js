@@ -89,10 +89,12 @@ function alloc_shot(n) {
         shots_free.shift();
     }
     if (n == count) {
+        // console.log("reuse", n);
         return dst;
     } else {
         // 追加確保
         const dst2 = dst.concat(initialize_shot(n - count));
+        // console.log("reuse", count, "initialize", n - count);
         return dst2;
     }
 }
@@ -105,6 +107,7 @@ function update_shot() {
             shots_use[i].visible = false;
             shots_free.push(shots_use[i]);
             shots_use.splice(i, 1);
+            // console.log("release");
             continue;
         }
         // 自機との当たり判定
@@ -120,15 +123,16 @@ function update_shot() {
 
 //======================== danmaku generator ========================
 
+// x,y: 中心
+// n: 玉の数
+// t: 時間
 function circle(x, y, n, t = 2000) {
     const shots = alloc_shot(n);
     const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
     for(let i = 0 ; i < n ; ++i) {
-        shots[i].visible = true;
         const rad = 2 * Math.PI * i / n;
         const dx = r * Math.cos(rad) + x;
         const dy = r * Math.sin(rad) + y;
-        console.log(dx, dy, rad, r, Math.cos(rad), Math.sin(rad));
         createjs.Tween
                 .get(shots[i])
                 .to({x: x, y: y, visible: true})
@@ -136,7 +140,32 @@ function circle(x, y, n, t = 2000) {
                 .to({x: dx, y: dy}, t, createjs.Ease.sineIn);
     }
 }
+
+// x,y: 中心
+// n: 玉の数
+// t: 時間
+// delta_t: 弾ごとのスピード差分 
+function horming(x, y, n, t = 2000, delta_t = 500) {
+    const sx = player.x - x;
+    const sy = player.y - y;
+    const rad = Math.atan2(sy, sx);
+
+    const r = 2 * Math.sqrt(Math.pow(window.innerWidth, 2) + Math.pow(window.innerHeight, 2));
+    const dx = r * Math.cos(rad) + x;
+    const dy = r * Math.sin(rad) + y;
+    console.log(dx,dy,r,rad, sx, sy);
+    const shots = alloc_shot(n);
+    for(let i = 0 ; i < n ; ++i) {
+        createjs.Tween
+                .get(shots[i])
+                .to({x: x, y: y, visible: true})
+                .wait(config.delay)
+                .to({x: dx, y: dy}, t + delta_t * i, createjs.Ease.sineIn);
+    }
+}
 circle(10, 10, 10);
+horming(0, 0, 10);
+
 //======================== danmaku generator ========================
 
 
@@ -163,8 +192,9 @@ function tick() {
         // hit test
         if(update_shot() && !config.no_stop) {
             // createjs.Ticker.paused = true;
+            // is_run = false;
             console.log("gameover");
-            is_run = false;
+
         }
     } else {
         // TODO:リスタート
