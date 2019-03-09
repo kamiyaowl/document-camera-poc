@@ -15,6 +15,8 @@ function get_query() {
 }
 const config = get_query();
 if(!config.margin) config.margin = 100;
+if(!config.center_shift_y) config.center_shift_y = 5;
+if(!config.delay) config.delay = 200;
 
 console.log('config', config);
 // const
@@ -57,7 +59,7 @@ console.log('ready');
 //============================== setup ==============================
 
 
-//======================== danmaku generator ========================
+//======================== shot generator ========================
 const shot_path = "./images/flower_tanpopo.png";
 const shots_use = []; // .visible = true 使用中のリソース
 const shots_free = []; // .visible = false 使用中のリソース
@@ -114,10 +116,27 @@ function update_shot() {
     return false;
 }
 
+//======================== shot generator ========================
 
-const x = alloc_shot(1);
-const t = createjs.Tween.get(x[0]).to({y: 2000}, 2000, createjs.Ease.sineIn);
+//======================== danmaku generator ========================
 
+function circle(x, y, n, t = 2000) {
+    const shots = alloc_shot(n);
+    const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
+    for(let i = 0 ; i < n ; ++i) {
+        shots[i].visible = true;
+        const rad = 2 * Math.PI * i / n;
+        const dx = r * Math.cos(rad) + x;
+        const dy = r * Math.sin(rad) + y;
+        console.log(dx, dy, rad, r, Math.cos(rad), Math.sin(rad));
+        createjs.Tween
+                .get(shots[i])
+                .to({x: x, y: y, visible: true})
+                .wait(config.delay)
+                .to({x: dx, y: dy}, t, createjs.Ease.sineIn);
+    }
+}
+circle(10, 10, 10);
 //======================== danmaku generator ========================
 
 
@@ -128,6 +147,7 @@ let is_run = true; // ゲームオーバー時に止める
 function game_init() {
     start_date = new Date();
     is_run = true;
+    createjs.Ticker.paused = false;
 }
 game_init();
 
@@ -137,11 +157,12 @@ function tick() {
         counter_text.text = window.innerWidth + "x" + window.innerHeight + " " + ((new Date() - start_date) / 1000.0) + " [sec]";
         // mouse cursor
         player_center.x = stage.mouseX;
-        player_center.y = stage.mouseY;
+        player_center.y = stage.mouseY - config.center_shift_y;
         player.x = stage.mouseX;
         player.y = stage.mouseY;
         // hit test
-        if(update_shot()) {
+        if(update_shot() && !config.no_stop) {
+            // createjs.Ticker.paused = true;
             console.log("gameover");
             is_run = false;
         }
