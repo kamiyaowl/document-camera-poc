@@ -57,32 +57,61 @@ console.log('ready');
 
 //======================== danmaku generator ========================
 const shot_path = "./images/flower_tanpopo.png";
-const shots = [];
-function generate_shot(n) {
-    const diff = n - shots.length;
-    if(diff < 1) return;
-    else {
-        for(let i = 0 ; i < diff ; ++i) {
-            const s = new createjs.Bitmap(shot_path);
-            s.scaleX = 0.5;
-            s.scaleY = 0.5;
-            // s.visible = false;
-            stage.addChild(s);
-            shots.push(s);
-        }
+const shots_use = []; // .visible = true 使用中のリソース
+const shots_free = []; // .visible = false 使用中のリソース
+
+// nの数だけShapeを確保する
+function initialize_shot(n) {
+    const dst = [];
+    for(let i = 0 ; i < n ; ++i) {
+        const s = new createjs.Bitmap(shot_path);
+        s.scaleX = 0.5;
+        s.scaleY = 0.5;
+        // s.visible = false;
+        stage.addChild(s);
+        shots_use.push(s);
+        dst.push(s);
+    }
+    return dst;
+}
+// shots_freeかinitialize_shot()で指定された数を取得して返します。
+// 同時にshots_useに登録する
+function alloc_shot(n) {
+    const dst = [];
+    const count = Math.min(shots_free.length, n);
+    for(let i = 0 ; i < count ; ++i) {
+        dst.push(shots_free[i]);
+        shots_use.push(shots_free[i]);
+        shots_free.shift();
+    }
+    if (n == count) {
+        return dst;
+    } else {
+        // 追加確保
+        const dst2 = dst.concat(initialize_shot(n - count));
+        return dst2;
     }
 }
-function is_hit() {
-    for(let i = 0 ; i < shots.length ; ++i) {
-        if(!shots[i].visible) continue;
-        const p = player_center.localToLocal(0, 0, shots[i]);
-        if(shots[i].hitTest(p.x, p.y)) {
+function update_shot() {
+    for(let i = 0 ; i < shots_use.length ; ++i) {
+        // 画面外のリソース開放管理
+        const margin = 100;
+        if((!shots_use[i].visible) ||
+           (shots_use[i].x < -margin || shots_use[i].x > window.innerWidth + margin) ||
+           (shots_use[i].y < -margin || shots_use[i].y > window.innerHeight + margin)) {
+            shots_use[i].visible = false;
+            shots_free.push(shots_use[i]);
+            shots_use.splice(i, 1);
+        }
+        // 自機との当たり判定
+        const p = player_center.localToLocal(0, 0, shots_use[i]);
+        if(shots_use[i].hitTest(p.x, p.y)) {
             return true;
         }
     }
     return false;
 }
-generate_shot(100);
+console.log(alloc_shot(3));
 //======================== danmaku generator ========================
 
 
@@ -106,7 +135,7 @@ function tick() {
         player.x = stage.mouseX;
         player.y = stage.mouseY;
         // hit test
-        if(is_hit()) {
+        if(update_shot()) {
             console.log("gameover");
             is_run = false;
         }
