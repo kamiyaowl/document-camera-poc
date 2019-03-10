@@ -17,8 +17,8 @@ const config = get_query();
 if(!config.margin) config.margin = 100;
 if(!config.center_shift_y) config.center_shift_y = 5;
 if(!config.delay) config.delay = 200;
-if(!config.interval) config.interval = 10000;
-if(!config.difficulty) config.difficulty = 20; // 0 ~ 100で
+if(!config.interval) config.interval = 3000;
+if(!config.difficulty) config.difficulty = 10; // 0 ~ 100で
 if(!config.increase_difficulty) config.increase_difficulty = 1; 
 
 console.log('config', config);
@@ -52,6 +52,7 @@ player_center.visible = (config.show_pointer ? true : false);
 stage.addChild(player_center);
 
 const counter_text = new createjs.Text("Ready", "32px sans-serif", "Orange");
+counter_text.z = 100;
 stage.addChild(counter_text);
 
 function fit_screen() {
@@ -89,21 +90,8 @@ function initialize_shot(n) {
 // 同時にshots_useに登録する
 function alloc_shot(n) {
     shots_sum += n;
-    const dst = [];
-    const count = Math.min(shots_free.length, n);
-    for(let i = 0 ; i < count ; ++i) {
-        dst.push(shots_free[0]);
-        shots_use.push(shots_free[0]);
-        shots_free.shift();
-    }
-    if (n == dst.length) {
-        // console.log("reuse", n);
-        return dst;
-    } else {
-        // 追加確保
-        const dst2 = dst.concat(initialize_shot(n - count));
-        return dst2;
-    }
+    // 長生きしないしまぁもういいやって感じ
+    return initialize_shot(n);
 }
 function update_shot() {
     for(let i = 0 ; i < shots_use.length ; ++i) {
@@ -256,6 +244,33 @@ const random_danmaku = [
         global_n += config.difficulty / 10;
         global_t += config.difficulty / 10;
     },
+    (x, y) => {
+        guruguru(x, y, global_n, guruguru_c, global_t, guruguru_t_start, guruguru_delta_t, guruguru_start_ratio);
+        global_n += config.difficulty / 10;
+        global_t += config.difficulty / 10;
+        guruguru_c += 1;
+        guruguru_t_start += config.difficulty / 10;
+        guruguru_delta_t += config.difficulty / 10;
+    },
+    (x, y) => {
+        horming(x, y, global_n, global_t, horming_delta_t);
+        global_n += config.difficulty / 10;
+        global_t += config.difficulty / 10;
+        horming_delta_t += 20;
+    },
+    (x, y) => {
+        fall(x, y, global_n, fall_random_r, global_t, fall_random_t);
+        global_n += config.difficulty / 10;
+        global_t += config.difficulty / 10;
+        fall_random_r += 20;
+        fall_random_t += 20;
+    },
+    (x, y) => {
+        explode(x, y, global_n,  global_t, explode_random_t);
+        global_n += config.difficulty / 10;
+        global_t += config.difficulty / 10;
+        explode_random_r += 20;
+    },
 ];
 function update_enemy() {
     if ((new Date() - last_event) > config.interval) {
@@ -267,9 +282,9 @@ function update_enemy() {
                 .wait(config.interval / 10)
                 .to({x: x, y: y, visible: true}, config.interval / 10, createjs.Ease.sineInOut);
         // 弾幕を発生させる
-        random_danmaku[Math.floor(Math.random() * random_danmaku.length)](enemy.x, enemy.y);
+        random_danmaku[Math.round(Math.random() * random_danmaku.length)](enemy.x, enemy.y);
         // だんだん難易度を上げる
-        config.interval -= config.difficulty;
+        config.interval -= config.difficulty * 10;
         config.difficulty += config.increase_difficulty; // 難易度も上げとく
         if (config.interval < 1000) config.interval = 1000;
         last_event = new Date();
@@ -290,7 +305,7 @@ function game_init() {
 function tick() {
     if (is_run) {
         // counter
-        counter_text.text = window.innerWidth + "x" + window.innerHeight + " tampopo:" + shots_sum + " " + ((new Date() - start_date) / 1000.0) + " [sec]";
+        counter_text.text = window.innerWidth + "x" + window.innerHeight + " tampopo:" + Math.floor(shots_sum) + " " + Math.floor((new Date() - start_date) / 1000.0) + " [sec]";
         // mouse cursor
         player_center.x = stage.mouseX;
         player_center.y = stage.mouseY - config.center_shift_y;
@@ -300,12 +315,12 @@ function tick() {
         update_enemy();
         // hit test
         if(update_shot() && !config.no_stop) {
-            createjs.Ticker.paused = true;
-            is_run = false;
-            console.log("gameover");
+            if (!config.debug) {
+                createjs.Ticker.paused = true;
+                is_run = false;
+            }
+            console.log("gameover", config);
         }
-    } else {
-        // TODO:リスタート
     }
 }
 
