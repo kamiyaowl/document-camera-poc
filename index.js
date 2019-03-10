@@ -149,7 +149,8 @@ function circle(x, y, n = 15, t = 2000) {
 // t: 時間
 // t_start: 最初に球が出現してから止まっている時間
 // delta_t: 弾ごとのディレイ
-function guruguru(x, y, n = 300, c = 11, t = 2000, t_start = 200, delta_t = 50) {
+// start_ratio: 初速が本命の速度のどれ位化
+function guruguru(x, y, n = 300, c = 11, t = 2000, t_start = 200, delta_t = 50, start_ratio = 0.05) {
     const shots = alloc_shot(n);
     const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
     const r_start = r * 0.05;
@@ -164,7 +165,6 @@ function guruguru(x, y, n = 300, c = 11, t = 2000, t_start = 200, delta_t = 50) 
                 .wait(delta_t * i)
                 .to({x: x, y: y, visible: true})
                 .to({x: dx_start, y: dy_start}, t_start, createjs.Ease.sineIn)
-                .wait(config.delay)
                 .to({x: dx, y: dy}, t, createjs.Ease.sineIn);
     }
 }
@@ -182,7 +182,6 @@ function horming(x, y, n = 10, t = 2000, delta_t = 500) {
     const r = 2 * Math.sqrt(Math.pow(window.innerWidth, 2) + Math.pow(window.innerHeight, 2));
     const dx = r * Math.cos(rad) + x;
     const dy = r * Math.sin(rad) + y;
-    console.log(dx,dy,r,rad, sx, sy);
     const shots = alloc_shot(n);
     for(let i = 0 ; i < n ; ++i) {
         createjs.Tween
@@ -192,9 +191,30 @@ function horming(x, y, n = 10, t = 2000, delta_t = 500) {
                 .to({x: dx, y: dy}, t + delta_t * i, createjs.Ease.sineIn);
     }
 }
+// 敵の方向に速度の違う玉を一気に出す
+// x,y: 中心
+// n: 玉の数
+// t: 時間
+// delta_t: 弾ごとのスピード差分 
+function fall(x, y, n = 20, random_r = 500, t = 2000, random_t = 1000) {
+    const shots = alloc_shot(n);
+    for(let i = 0 ; i < n ; ++i) {
+        const sx = x + (Math.random() * random_r - random_r / 2);
+        const sy = y + (Math.random() * random_r - random_r / 2);
+        const gx = x + (Math.random() * random_r - random_r / 2);
+        const gy = window.innerHeight + config.margin;
+        const delay = t + Math.random() * random_t;
+        createjs.Tween
+                .get(shots[i])
+                .to({x: sx, y: sy, visible: true})
+                .wait(delay)
+                .to({x: gx, y: gy}, t, createjs.Ease.sineIn);
+    }
+}
 circle(10, 10);
-guruguru(10, 10);
+guruguru(10, 10, 99);
 horming(0, 0);
+fall(200,20);
 
 //======================== danmaku generator ========================
 
