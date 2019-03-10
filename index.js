@@ -17,16 +17,28 @@ const config = get_query();
 if(!config.margin) config.margin = 100;
 if(!config.center_shift_y) config.center_shift_y = 5;
 if(!config.delay) config.delay = 200;
+if(!config.interval) config.interval = 10000;
+if(!config.difficulty) config.difficulty = 20; // 0 ~ 100で
+if(!config.increase_difficulty) config.increase_difficulty = 1; 
 
 console.log('config', config);
 // const
-const sashimi_path = "./images/food_sashimi.png";
+const enemy_path = "./images/pose_udemakuri_man.png";
 const player_path = "./images/food_sashimi.png";
 
 const stage = new createjs.Stage("app");
 if(createjs.Touch.isSupported()) {
     createjs.Touch.enable(stage);
 }
+const enemy = new createjs.Bitmap(enemy_path);
+enemy.scaleX = 0.5;
+enemy.scaleY = 0.5;
+enemy.regX = 644 / 3;
+enemy.regY = 800 / 2;
+enemy.x = window.innerWidth / 2;
+enemy.y = window.innerHeight / 5;
+enemy.visible = true;
+stage.addChild(enemy);
 
 const player = new createjs.Bitmap(player_path);
 player.regX = 400 / 2;
@@ -41,11 +53,6 @@ stage.addChild(player_center);
 
 const counter_text = new createjs.Text("Ready", "32px sans-serif", "Orange");
 stage.addChild(counter_text);
-
-createjs.Ticker.addEventListener('tick', function(){
-    tick();
-    stage.update();
-});
 
 function fit_screen() {
     stage.canvas.width = window.innerWidth;
@@ -63,7 +70,7 @@ console.log('ready');
 const shot_path = "./images/flower_tanpopo.png";
 const shots_use = []; // .visible = true 使用中のリソース
 const shots_free = []; // .visible = false 使用中のリソース
-
+let shots_sum = 0;
 // nの数だけShapeを確保する
 function initialize_shot(n) {
     const dst = [];
@@ -71,7 +78,7 @@ function initialize_shot(n) {
         const s = new createjs.Bitmap(shot_path);
         s.scaleX = 0.5;
         s.scaleY = 0.5;
-        // s.visible = false;
+        s.visible = false;
         stage.addChild(s);
         shots_use.push(s);
         dst.push(s);
@@ -81,20 +88,20 @@ function initialize_shot(n) {
 // shots_freeかinitialize_shot()で指定された数を取得して返します。
 // 同時にshots_useに登録する
 function alloc_shot(n) {
+    shots_sum += n;
     const dst = [];
     const count = Math.min(shots_free.length, n);
     for(let i = 0 ; i < count ; ++i) {
-        dst.push(shots_free[i]);
-        shots_use.push(shots_free[i]);
+        dst.push(shots_free[0]);
+        shots_use.push(shots_free[0]);
         shots_free.shift();
     }
-    if (n == count) {
+    if (n == dst.length) {
         // console.log("reuse", n);
         return dst;
     } else {
         // 追加確保
         const dst2 = dst.concat(initialize_shot(n - count));
-        // console.log("reuse", count, "initialize", n - count);
         return dst2;
     }
 }
@@ -191,7 +198,7 @@ function horming(x, y, n = 10, t = 2000, delta_t = 500) {
                 .to({x: dx, y: dy}, t + delta_t * i, createjs.Ease.sineIn);
     }
 }
-// 敵の方向に速度の違う玉を一気に出す
+// 敵の方向に落ちていくような玉を出す
 // x,y: 中心
 // n: 玉の数
 // t: 時間
@@ -211,43 +218,102 @@ function fall(x, y, n = 20, random_r = 500, t = 2000, random_t = 1000) {
                 .to({x: gx, y: gy}, t, createjs.Ease.sineIn);
     }
 }
-circle(10, 10);
-guruguru(10, 10, 99);
-horming(0, 0);
-fall(200,20);
-
+function explode(x, y, n = 100, t = 2000, random_t = 2000) {
+    const shots = alloc_shot(n);
+    const r = 2 * Math.max(window.innerWidth, window.innerHeight) + config.margin;
+    const r_start = r * 0.05;
+    for(let i = 0 ; i < n ; ++i) {
+        const rad = 2 * Math.PI * Math.random();
+        const dx_start = r_start * Math.cos(rad) + x;
+        const dy_start = r_start * Math.sin(rad) + y;
+        const dx = r * Math.cos(rad) + x;
+        const dy = r * Math.sin(rad) + y;
+        const delay = Math.random() * random_t;
+        createjs.Tween
+                .get(shots[i])
+                .to({x: x, y: y, visible: true})
+                .wait(delay)
+                .to({x: dx_start, y: dy_start}, t, createjs.Ease.sineIn)
+                .to({x: dx, y: dy}, t, createjs.Ease.sineIn);
+    }
+}
 //======================== danmaku generator ========================
+// 使うたびに難しくしておく
+let global_n = 10;
+let global_t = 2000;
+let guruguru_c = 11;
+let guruguru_t_start = 200;
+let guruguru_delta_t = 50;
+let guruguru_start_ratio = 0.05;
+let horming_delta_t = 500;
+let fall_random_r = 500;
+let fall_random_t = 1000;
+let explode_random_t = 2000;
 
+const random_danmaku = [
+    (x, y) => {
+        circle(x, y, global_n, global_t);
+        global_n += config.difficulty / 10;
+        global_t += config.difficulty / 10;
+    },
+];
+function update_enemy() {
+    if ((new Date() - last_event) > config.interval) {
+        // 本体の移動
+        const x = window.innerWidth * Math.random();
+        const y = window.innerHeight / 3 * Math.random();
+        createjs.Tween
+                .get(enemy)
+                .wait(config.interval / 10)
+                .to({x: x, y: y, visible: true}, config.interval / 10, createjs.Ease.sineInOut);
+        // 弾幕を発生させる
+        random_danmaku[Math.floor(Math.random() * random_danmaku.length)](enemy.x, enemy.y);
+        // だんだん難易度を上げる
+        config.interval -= config.difficulty;
+        config.difficulty += config.increase_difficulty; // 難易度も上げとく
+        if (config.interval < 1000) config.interval = 1000;
+        last_event = new Date();
+    }
+}
 
 //============================== game ==============================
 
 let start_date = new Date(); // 生存時間計算用
-let is_run = true; // ゲームオーバー時に止める
+let is_run = false; // ゲームオーバー時に止める
+let last_event = new Date();
 function game_init() {
     start_date = new Date();
+    last_event = new Date() - config.interval / 2;
     is_run = true;
     createjs.Ticker.paused = false;
 }
-game_init();
-
 function tick() {
     if (is_run) {
         // counter
-        counter_text.text = window.innerWidth + "x" + window.innerHeight + " " + ((new Date() - start_date) / 1000.0) + " [sec]";
+        counter_text.text = window.innerWidth + "x" + window.innerHeight + " tampopo:" + shots_sum + " " + ((new Date() - start_date) / 1000.0) + " [sec]";
         // mouse cursor
         player_center.x = stage.mouseX;
         player_center.y = stage.mouseY - config.center_shift_y;
         player.x = stage.mouseX;
         player.y = stage.mouseY;
+        // enemy event
+        update_enemy();
         // hit test
         if(update_shot() && !config.no_stop) {
-            // createjs.Ticker.paused = true;
-            // is_run = false;
+            createjs.Ticker.paused = true;
+            is_run = false;
             console.log("gameover");
-
         }
     } else {
         // TODO:リスタート
     }
 }
+
 //============================== game ==============================
+createjs.Ticker.addEventListener('tick', function(){
+    tick();
+    stage.update();
+});
+setTimeout(function(){
+    game_init();
+}, 1000);
